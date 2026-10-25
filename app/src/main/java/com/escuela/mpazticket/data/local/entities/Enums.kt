@@ -5,6 +5,12 @@ enum class Priority {
     BAJA, MEDIA, ALTA
 }
 
+fun Priority.getDisplayName(): String = when (this) {
+    Priority.BAJA -> "Baja"
+    Priority.MEDIA -> "Media"
+    Priority.ALTA -> "Alta"
+}
+
 // Colores del semáforo automático
 enum class TrafficLightColor {
     VERDE, AMARILLO, ROJO

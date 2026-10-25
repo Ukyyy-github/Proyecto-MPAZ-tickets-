@@ -9,11 +9,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.escuela.mpazticket.repository.LocalTicketRepository
 import com.escuela.mpazticket.ui.screens.AddTicketScreen
+import com.escuela.mpazticket.ui.screens.TicketDetailScreen
 import com.escuela.mpazticket.ui.screens.TicketListScreen
 import com.escuela.mpazticket.ui.theme.MPAZTicketTheme
 import com.escuela.mpazticket.ui.viewmodel.TicketViewModel
@@ -54,8 +57,8 @@ fun AppNavigation(factory: ViewModelFactory) {
                 onAddTicketClick = {
                     navController.navigate("add_ticket")
                 },
-                onTicketClick = {
-                    // Navegación a detalle vacía por ahora
+                onTicketClick = { ticket ->
+                    navController.navigate("ticket_detail/${ticket.id}")
                 }
             )
         }
@@ -67,6 +70,23 @@ fun AppNavigation(factory: ViewModelFactory) {
                     navController.popBackStack()
                 },
                 onTicketCreated = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = "ticket_detail/{ticketId}",
+            arguments = listOf(navArgument("ticketId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val ticketId = backStackEntry.arguments?.getLong("ticketId") ?: 0L
+            TicketDetailScreen(
+                ticketId = ticketId,
+                viewModel = ticketViewModel,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onTicketDeleted = {
                     navController.popBackStack()
                 }
             )

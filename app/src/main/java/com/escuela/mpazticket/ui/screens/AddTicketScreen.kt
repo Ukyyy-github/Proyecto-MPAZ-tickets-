@@ -29,7 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.escuela.mpazticket.data.local.entities.Priority
+import com.escuela.mpazticket.data.local.entities.*
 import com.escuela.mpazticket.ui.viewmodel.TicketViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,7 +107,7 @@ fun AddTicketScreen(
             )
 
             Text(
-                text = "Prioridad Inicial",
+                text = "Gravedad del Problema",
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -119,7 +119,7 @@ fun AddTicketScreen(
                     FilterChip(
                         selected = prioridadSeleccionada == priority,
                         onClick = { prioridadSeleccionada = priority },
-                        label = { Text(priority.name) }
+                        label = { Text(priority.getDisplayName()) }
                     )
                 }
             }
