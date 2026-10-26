@@ -1,36 +1,44 @@
 package com.escuela.mpazticket.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.escuela.mpazticket.data.local.entities.*
 import com.escuela.mpazticket.ui.viewmodel.TicketViewModel
+import java.io.File
+
+fun saveUriToFile(context: Context, uri: Uri): String? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val photoFile = File(context.filesDir, "ticket_photo_${System.currentTimeMillis()}.jpg")
+        inputStream?.use { input ->
+            photoFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        photoFile.absolutePath
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +52,25 @@ fun AddTicketScreen(
     var ubicacion by remember { mutableStateOf("") }
     var categoria by remember { mutableStateOf("Mantenimiento General") }
     var prioridadSeleccionada by remember { mutableStateOf(Priority.MEDIA) }
+
+    var fotoUri by remember { mutableStateOf<Uri?>(null) }
+    var bitmapPreview by remember { mutableStateOf<ImageBitmap?>(null) }
+    val context = LocalContext.current
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            fotoUri = it
+            try {
+                val inputStream = context.contentResolver.openInputStream(it)
+                val bmp = BitmapFactory.decodeStream(inputStream)
+                bitmapPreview = bmp?.asImageBitmap()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -124,18 +151,66 @@ fun AddTicketScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Fotografía Adjunta (Opcional)",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            if (bitmapPreview != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                ) {
+                    Card(
+                        modifier = Modifier.fillMaxSize(),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Image(
+                            bitmap = bitmapPreview!!,
+                            contentDescription = "Vista previa de la foto",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            fotoUri = null
+                            bitmapPreview = null
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    ) {
+                        Text("Quitar", fontSize = 12.sp)
+                    }
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { imagePickerLauncher.launch("image/*") },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Adjuntar Foto desde Galería")
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
                     if (titulo.isNotBlank() && ubicacion.isNotBlank()) {
+                        val savedPath = fotoUri?.let { uri -> saveUriToFile(context, uri) }
                         viewModel.registrarTicket(
                             titulo = titulo,
                             descripcion = descripcion,
                             ubicacion = ubicacion,
                             categoria = categoria,
                             prioridadInicial = prioridadSeleccionada,
-                            creadoPorEmail = "usuario@escuela.cl"
+                            creadoPorEmail = "usuario@escuela.cl",
+                            fotoPath = savedPath
                         )
                         onTicketCreated()
                     }

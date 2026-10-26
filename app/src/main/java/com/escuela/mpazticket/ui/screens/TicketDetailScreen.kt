@@ -1,5 +1,7 @@
 package com.escuela.mpazticket.ui.screens
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,6 +11,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -16,6 +20,7 @@ import com.escuela.mpazticket.data.local.entities.Priority
 import com.escuela.mpazticket.data.local.entities.TicketStatus
 import com.escuela.mpazticket.ui.state.SemaforoEvaluator
 import com.escuela.mpazticket.ui.viewmodel.TicketViewModel
+import java.io.File
 
 fun Priority.getDisplayName(): String = when (this) {
     Priority.BAJA -> "Baja"
@@ -123,6 +128,42 @@ fun TicketDetailScreen(
                     text = ticket.descripcion,
                     style = MaterialTheme.typography.bodyLarge
                 )
+
+                // Attached Photo Display
+                ticket.fotoPath?.let { path ->
+                    val file = File(path)
+                    if (file.exists()) {
+                        val bitmap = remember(path) {
+                            try {
+                                BitmapFactory.decodeFile(path)?.asImageBitmap()
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                null
+                            }
+                        }
+                        if (bitmap != null) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Fotografía Adjunta:",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(240.dp),
+                                shape = MaterialTheme.shapes.medium
+                            ) {
+                                Image(
+                                    bitmap = bitmap,
+                                    contentDescription = "Fotografía adjunta",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 

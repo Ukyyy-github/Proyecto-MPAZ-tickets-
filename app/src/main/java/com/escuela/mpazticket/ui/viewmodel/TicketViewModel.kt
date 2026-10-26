@@ -28,7 +28,8 @@ class TicketViewModel(
         ubicacion: String,
         categoria: String,
         prioridadInicial: Priority,
-        creadoPorEmail: String
+        creadoPorEmail: String,
+        fotoPath: String? = null
     ) {
         viewModelScope.launch {
             val nuevoTicket = TicketEntity(
@@ -38,7 +39,8 @@ class TicketViewModel(
                 categoria = categoria,
                 prioridadInicial = prioridadInicial,
                 estado = TicketStatus.PENDIENTE,
-                creadoPorEmail = creadoPorEmail
+                creadoPorEmail = creadoPorEmail,
+                fotoPath = fotoPath
             )
             repository.insertTicket(nuevoTicket)
         }

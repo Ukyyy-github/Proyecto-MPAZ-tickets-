@@ -27,13 +27,13 @@ class LocalTicketRepository(context: Context) : TicketRepository {
 
     private fun loadInitialTickets(): List<TicketEntity> {
         return try {
-            if (ticketsFile.exists()) {
+            val list = (if (ticketsFile.exists()) {
                 val jsonString = ticketsFile.readText()
                 val jsonArray = JSONArray(jsonString)
-                val list = mutableListOf<TicketEntity>()
+                val mutableList = mutableListOf<TicketEntity>()
                 for (i in 0 until jsonArray.length()) {
                     val obj = jsonArray.getJSONObject(i)
-                    list.add(
+                    mutableList.add(
                         TicketEntity(
                             id = obj.getLong("id"),
                             titulo = obj.getString("titulo"),
@@ -49,13 +49,40 @@ class LocalTicketRepository(context: Context) : TicketRepository {
                         )
                     )
                 }
-                if (list.isEmpty()) getDefaultTickets() else list
+                if (mutableList.isEmpty()) getDefaultTickets() else mutableList
             } else {
                 getDefaultTickets()
+            }).toMutableList()
+
+            if (cleanOldPhotos(list)) {
+                saveTicketsToFile(list)
             }
+            list
         } catch (e: Exception) {
             getDefaultTickets()
         }
+    }
+
+    private fun cleanOldPhotos(list: MutableList<TicketEntity>): Boolean {
+        val twentyEightDaysMillis = 28L * 24 * 60 * 60 * 1000L
+        val now = System.currentTimeMillis()
+        var modified = false
+        for (i in list.indices) {
+            val t = list[i]
+            if (!t.fotoPath.isNullOrBlank() && (now - t.fechaCreacionTimestamp) > twentyEightDaysMillis) {
+                try {
+                    val file = File(t.fotoPath)
+                    if (file.exists()) {
+                        file.delete()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                list[i] = t.copy(fotoPath = null)
+                modified = true
+            }
+        }
+        return modified
     }
 
     private fun getDefaultTickets(): List<TicketEntity> {
@@ -194,6 +221,17 @@ class LocalTicketRepository(context: Context) : TicketRepository {
 
     override suspend fun deleteTicket(id: Long) {
         val currentList = _ticketsFlow.value.toMutableList()
+        val ticket = currentList.find { it.id == id }
+        ticket?.fotoPath?.let { path ->
+            try {
+                val file = File(path)
+                if (file.exists()) {
+                    file.delete()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
         currentList.removeAll { it.id == id }
         _ticketsFlow.value = currentList
         saveTicketsToFile(currentList)
