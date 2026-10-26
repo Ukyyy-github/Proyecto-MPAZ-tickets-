@@ -119,7 +119,7 @@ fun AddTicketScreen(
             OutlinedTextField(
                 value = categoria,
                 onValueChange = { categoria = it },
-                label = { Text("Categoría") },
+                label = { Text("Categoría (Ej: Infraestructura, Limpieza)") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -216,7 +216,6 @@ fun AddTicketScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = titulo.isNotBlank() && ubicacion.isNotBlank()
             ) {
                 Text("Guardar Ticket")
             }
