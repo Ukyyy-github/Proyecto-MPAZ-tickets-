@@ -13,6 +13,9 @@ class ViewModelFactory(
         if (modelClass.isAssignableFrom(TicketViewModel::class.java)) {
             return TicketViewModel(repository) as T
         }
+        if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
+            return AuthViewModel(repository) as T
+        }
         throw IllegalArgumentException("Clase ViewModel no reconocida")
     }
 }
