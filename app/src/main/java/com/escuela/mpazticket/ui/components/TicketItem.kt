@@ -31,8 +31,8 @@ fun TicketItem(
     onTicketClick: (TicketEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Evaluación basada en la fecha de creación real del ticket
-    val semaforoInfo = SemaforoEvaluator.calcularUrgencia(ticket.fechaCreacionTimestamp)
+    // Evaluación basada en la fecha de creación real y la gravedad inicial del ticket
+    val semaforoInfo = SemaforoEvaluator.calcularUrgencia(ticket.fechaCreacionTimestamp, ticket.prioridadInicial)
 
     Card(
         onClick = { onTicketClick(ticket) },

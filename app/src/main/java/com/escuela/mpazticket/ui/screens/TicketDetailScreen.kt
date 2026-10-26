@@ -48,7 +48,7 @@ fun TicketDetailScreen(
     val tickets by viewModel.ticketsList.collectAsState()
     val ticket = tickets.find { it.id == ticketId }
 
-    val semaforoInfo = ticket?.let { SemaforoEvaluator.calcularUrgencia(it.fechaCreacionTimestamp) }
+    val semaforoInfo = ticket?.let { SemaforoEvaluator.calcularUrgencia(it.fechaCreacionTimestamp, it.prioridadInicial) }
 
     Scaffold(
         topBar = {

@@ -2,7 +2,8 @@ package com.escuela.mpazticket.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.concurrent.TimeUnit
+import com.escuela.mpazticket.ui.state.SemaforoEvaluator
+import com.escuela.mpazticket.ui.state.SemaforoUrgencia
 
 @Entity(tableName = "tickets")
 data class TicketEntity(
@@ -21,22 +22,14 @@ data class TicketEntity(
 ) {
     /**
      * Calcula el color del semáforo considerando la gravedad inicial
-     * y los días transcurridos respecto al límite de 2 semanas (14 días).
+     * y los días transcurridos mediante SemaforoEvaluator.
      */
     fun obtenerColorSemaforo(): TrafficLightColor {
-        val diasTranscurridos = TimeUnit.MILLISECONDS.toDays(
-            System.currentTimeMillis() - fechaCreacionTimestamp
-        )
-
-        return when {
-            // Regla 1: Urgente por gravedad ALTA o más de 10 días esperando
-            prioridadInicial == Priority.ALTA || diasTranscurridos >= 10 -> TrafficLightColor.ROJO
-
-            // Regla 2: Advertencia por gravedad MEDIA o más de 4 días esperando
-            prioridadInicial == Priority.MEDIA || diasTranscurridos >= 4 -> TrafficLightColor.AMARILLO
-
-            // Regla 3: Recién creado y de baja gravedad
-            else -> TrafficLightColor.VERDE
+        val urgencia = SemaforoEvaluator.calcularUrgencia(fechaCreacionTimestamp, prioridadInicial)
+        return when (urgencia) {
+            SemaforoUrgencia.VERDE -> TrafficLightColor.VERDE
+            SemaforoUrgencia.AMARILLO -> TrafficLightColor.AMARILLO
+            SemaforoUrgencia.ROJO -> TrafficLightColor.ROJO
         }
     }
 }
